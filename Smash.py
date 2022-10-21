@@ -11,7 +11,11 @@ def main(argv):
     :param argv: List of command line arguments
     """
     # Program Variables
+    test_var = 0
 
+    ####################################
+    ### Command Line Processing
+    ####################################
     try:
         # Convert the list of user provided command line arguments into meaningful objects to manipulate.
         # The attributes as the second and third parameters are listed in more detail below.
@@ -31,7 +35,20 @@ def main(argv):
             sys.exit()
         elif opt in ("-t", "--test"):
             # Using user provided audio file.
-            print("User enter value for t = " + arg)
+            test_var = arg
+
+    ####################################
+    ### Main Code Section
+    ####################################
+
+    # Do something 1
+    print("I'm doing something 1.")
+
+    # Do something 2
+    print("I'm doing something 2.")
+
+    print("Oh by the way, test var is: " + str(test_var))
+
 
 def get_usage():
     """
