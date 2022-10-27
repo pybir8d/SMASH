@@ -19,10 +19,11 @@ def main(argv):
     try:
         # Convert the list of user provided command line arguments into meaningful objects to manipulate.
         # The attributes as the second and third parameters are listed in more detail below.
-        opts, args = getopt.getopt(argv, "ht:", ["help", "test="])
+        opts, args = getopt.getopt(argv, "ht:t2:", ["help", "test=", "test2="])
     except getopt.GetoptError:
         # Ran into an error while converting the user supplied options. User should check their arguments and rerun the application.
         # Printing application usage and exiting.
+        logging.warning("Did not use offered parameters")
         print(get_usage())
         sys.exit(2)
 
@@ -36,6 +37,9 @@ def main(argv):
         elif opt in ("-t", "--test"):
             # Using user provided audio file.
             test_var = arg
+        elif opt in ("-t2", "--test2"):
+            # Using user provided file.
+            test_var = arg
 
     ####################################
     ### Main Code Section
@@ -43,6 +47,7 @@ def main(argv):
 
     # Do something 1
     print("I'm doing something 1.")
+    logging.info("Doing something.")
 
     # Do something 2
     print("I'm doing something 2.")
@@ -52,7 +57,7 @@ def main(argv):
 
 def get_usage():
     """
-    Prints the applicaiton usage information
+    Prints the application usage information
 
     :return: String that describes the application usage.
     """
@@ -60,7 +65,7 @@ def get_usage():
 smash.py [opts]
 
     -t value, --test=<value>:                         Test value
-    -h, --help:                                       Diplays usage information.
+    -h, --help:                                       Displays usage information.
 
     """
 
@@ -68,7 +73,7 @@ smash.py [opts]
 
 if __name__ == "__main__":
     """
-    This initiates and calls the main function for this applicaiton. 
+    This initiates and calls the main function for this application. 
 
     Generally, this should be the last bit of code in this script.
     """
