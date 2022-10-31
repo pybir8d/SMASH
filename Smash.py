@@ -37,9 +37,9 @@ def main(argv):
         elif opt in ("-t", "--test"):
             # Using user provided audio file.
             test_var = arg
-        elif opt in ("-t2", "--test2"):
+        elif opt in ("-t", "--test"):
             # Using user provided file.
-            test_var = arg
+            test_var1 = arg
 
     ####################################
     ### Main Code Section
@@ -47,7 +47,7 @@ def main(argv):
 
     # Do something 1
     print("I'm doing something 1.")
-    logging.info("Doing something.")
+    logging.info(" Doing something.")
 
     # Do something 2
     print("I'm doing something 2.")
