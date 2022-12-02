@@ -3,6 +3,14 @@
 import getopt
 import logging
 import sys
+import click
+
+@click.command()
+@click.option("--test", "-t", defualt = 1, help = "Test Value")
+
+def idk(test):
+    #for test variables
+    test_var = test
 
 def main(argv):
     """
@@ -37,9 +45,6 @@ def main(argv):
         elif opt in ("-t", "--test"):
             # Using user provided audio file.
             test_var = arg
-        elif opt in ("-t", "--test"):
-            # Using user provided file.
-            test_var1 = arg
 
     ####################################
     ### Main Code Section
