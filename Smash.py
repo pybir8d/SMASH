@@ -6,11 +6,12 @@ import sys
 import click
 
 @click.command()
-@click.option("--test", "-t", defualt = 1, help = "Test Value")
+@click.option("--test", "-t", default = 1, help = "Test Value")
 
-def idk(test):
+def testVariable(test):
     #for test variables
     test_var = test
+    click.echo("I'm doing something 1. This is test variable: " + str(test_var))
 
 def main(argv):
     """
@@ -20,7 +21,7 @@ def main(argv):
     """
     # Program Variables
     test_var = 0
-
+"""
     ####################################
     ### Command Line Processing
     ####################################
@@ -61,20 +62,20 @@ def main(argv):
 
 
 def get_usage():
-    """
+    ""
     Prints the application usage information
 
     :return: String that describes the application usage.
-    """
-    usage_text = """
+    ""
+    usage_text = ""
 smash.py [opts]
 
     -t value, --test=<value>:                         Test value
     -h, --help:                                       Displays usage information.
 
-    """
+    ""
 
-    return usage_text
+    return usage_text"""
 
 if __name__ == "__main__":
     """
@@ -83,4 +84,5 @@ if __name__ == "__main__":
     Generally, this should be the last bit of code in this script.
     """
     logging.basicConfig(level=logging.DEBUG)
-    main(sys.argv[1:])
+    #main(sys.argv[1:])
+    testVariable()
