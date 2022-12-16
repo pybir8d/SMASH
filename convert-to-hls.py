@@ -1,24 +1,28 @@
 import click
 import logging
 import ffmpeg
+import os
 
+#@click.option("--infile", "-i", default='C:\Users\livia\OneDrive\Documents\srt 4\ex.mp4', help="mp4 video file inputted by the user")
+#media_input_filename = os.listdir(infile)
 @click.command()
-@click.option("--test", "-t", default = 1, help = "Test Value")
-@click.option("--infile", "-i", default = 'out.mp4', help = "mp4 video file inputted by the user")
-@click.option("--outfile", "-o", default = 'output.m3u8',  help = "Name of the export file")
-
+@click.option("--test", "-t", default=1, help="Test Value")
+@click.option("--infile", "-i", default='ex.mp4', help="mp4 video file inputted by the user")
+@click.option("--outfile", "-o", default='output.m3u8', help="Name of the export file")
 def main(test, infile, outfile):
-    #for file conversion
+    # for file conversion
     media_input_filename = infile
     playlist_filename = outfile
     input_stream = ffmpeg.input(media_input_filename, f='mp4')
-    output_stream = ffmpeg.output(input_stream, playlist_filename, format='hls', start_number=0, hls_time=5, hls_list_size=0)
+    output_stream = ffmpeg.output(input_stream, playlist_filename, format='hls', start_number=0, hls_time=5,
+                                  hls_list_size=0)
     ffmpeg.run(output_stream)
     click.echo("Files: " + media_input_filename + " and " + playlist_filename)
     testVariable(test)
 
+
 def testVariable(test_var):
-    #for test variables
+    # for test variables
     print(f"My local test variable is: {test_var}")
 
 
