@@ -18,7 +18,6 @@ def main(test, infile, outfile):
     click.echo("Files: " + media_input_filename + " and " + playlist_filename)
     testVariable(test)
 
-
 def testVariable(test_var):
     # for test variables
     print(f"My local test variable is: {test_var}")
