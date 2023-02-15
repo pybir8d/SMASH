@@ -41,23 +41,20 @@ def connect_to_server():
 
     for packet in packets:
         if packet.haslayer(Raw):
-            temp = packet["Raw"].load
+            temp = bytearray(packet["Raw"].load)
             ind = temp.find(b'\xff\xff\xff\xff\xff\xff\xff\xff\xff')
             if ind != -1:
                 i = ind
-                b = temp[i]
+                c1 = 0
                 for byte in temp:
-                    while (b == '\xff'):
-                        b = temp[i]
+                    while byte == 255 and c1 >= i:
                         i += 1
-                num = (i - 4) - (ind + 4) #number of bytes I can hide info in
+                    c1 += 1
                 strt = ind + 4
 
-                #inserting that number of bytes (num) from secret message (use zeros)
-                for byte in temp:
-                    while strt < i - 4:
-                        temp[strt] = b'00'
-                        strt += 1
+                while strt < (i - 4):
+                    temp[strt] = 0
+                    strt += 1
 
                 packet["Raw"].load = temp
                 listp.append(c)
