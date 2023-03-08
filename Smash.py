@@ -3,9 +3,11 @@
 import logging
 
 import click
+from scapy.layers.inet import IP
 from scapy.packet import Raw
 # from scapy.all import *
 from scapy.utils import rdpcap, wrpcap
+from struct import *
 
 @click.command()
 @click.option("--lowres", "-l", default='low.m3u8', help="Low resolution video in .m3u8")
@@ -51,45 +53,48 @@ def connect_to_server():
             "You can't get rid of it 'Cause you remember it all too well, yeah "
             "'Cause there we are again when I loved you so Back before you lost the one real thing you've ever known")
 
-    packets = rdpcap("pack3.pcap")
-    c = 0
+    packets = rdpcap("pack3.pcap")  # "reading" pcap file
+    c = 0  # for packets counter
     lc = 0  # letter count for string
-    listp = []
+    listp = []  # list of packets with target
     newPackets = []
 
+    lc = 0
     for packet in packets:
         if packet.haslayer(Raw):
-            temp = packet["Raw"].load
-            temp1 = hex(int.from_bytes(packet["Raw"].load, "big"))
-            t1 = []
-            for byte in temp1:
-                t1.append(byte)
+            temp = packet["Raw"].load # bytearray allows the array to be mutable
 
             ind = temp.find(b'\xff\xff\xff\xff\xff\xff\xff\xff\xff')
             if ind != -1:  # checking that the nine values above do exist in the packet
-                ind = ind // 2 - 1
-                i = ind
-                c1 = 0  # counting so the while loop starts at the right index
-                for byte in temp:
-                    while byte == 255 and c1 >= i:  # 255 = ff since byte is a decimal
-                        i += 1
-                    c1 += 1
+                endIn = ind
+                while temp[endIn] == b'\xff' and endIn < len(temp):
+                    endIn += 1
+
+                numOfBytesToHide = endIn - ind - 8 + 1  # how many bytes i can hide
                 strt = ind + 4
 
-                while strt < (i - 4):
+                while numOfBytesToHide > 0:
                     if lc >= len(atwS):
                         lc = 0
-                    t1[strt] = atwS[lc]  # making the bytes in between the text
+                    #atwS = bytes(atwS, "ascii")
+                    charToHide = atwS[lc]
+                    #temp[strt] = atwS[lc]  # hiding byte
+                    pack("c", charToHide.encode("ascii"))
+                    lc += 1  # letter counter
+                    numOfBytesToHide -= 1
                     strt += 1
-                    lc += 1
 
-                packet["Raw"].load = t1
-                listp.append(c)  # finding the packets with nine ff values
+                packet["Raw"].load = temp
+                listp.append(packet)  # finding the packets with nine ff values
+
+        packet = packet[IP]
+        del packet[IP].chksum
+        del packet[IP].len
+        del packet[IP].ihl
         newPackets.append(packet)
         c += 1
 
-    wrpcap('newpackT.pcap', newPackets)  # creating a new file after changing the packets
-    print(listp)
+    wrpcap('newpackT.pcap', newPackets)  # creating a new file after changing the packets "writing"
 
 
 if __name__ == "__main__":
