@@ -5,9 +5,7 @@ import logging
 import click
 from scapy.layers.inet import IP
 from scapy.packet import Raw
-# from scapy.all import *
 from scapy.utils import rdpcap, wrpcap
-from struct import *
 
 
 @click.command()
@@ -59,13 +57,11 @@ def connect_to_server():
     c = 0  # for packets counter
     lc = 0  # letter count for string
     listp = []  # list of packets with target
-    ntemp = ""  # new temp
     newPackets = []
 
-    lc = 0
     for packet in packets:
         if packet.haslayer(Raw):
-            temp = packet["Raw"].load  # bytearray allows the array to be mutable
+            temp = packet["Raw"].load
 
             ind = temp.find(b'\xff\xff\xff\xff\xff\xff\xff\xff\xff')
             if ind != -1:  # checking that the nine values above do exist in the packet
@@ -105,23 +101,3 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     main()
 
-# load = b"\xaa\xbb\xff\xcc\xee"
-# secret_msg = "c" # even though this is one character, it is still a string
-# Need to hide "c" where "\xff" is in the load variable
-# "\xff" is located at index value 2 (e.g. load[2])
-# Use list slicing to concatenate the parts together
-# load[2]
-# load[:2] # Keeps the first two characters
-# b'\xaa\xbb'
-# load[len(load)-2:] # Keeps the last two characters
-# b'\xcc\xee'
-# Convert string into byte array
-# secret_char_in_bytes = bytearray(secret_msg, "ascii") # This will return a list of len = 1
-# secret_char_in_bytes
-# bytearray(b'c')
-# secret_char_in_bytes[0]
-# Now concatenate it all together
-# new_load = load[:2] + secret_char_in_bytes + load[len(load)-2:]
-# new_load
-# b'\xaa\xbbc\xcc\xee'
-# the character "c" is in between \xbb and \xcc --> \xbbc\xcc
