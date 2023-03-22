@@ -21,11 +21,12 @@ def decode():
             temp = packet["Raw"].load
 
             ind = temp.find(b'\xff\xff\xff\xff')
-            if ind != -1:  # checking that the four values above do exist in the packet
+            if ind >= 0:  # checking that the four values above do exist in the packet
                 second_temp = temp[ind + 4:]
                 end = second_temp.find(b'\xff\xff\xff\xff')  # finding second instance of four 0xFF
+                end = end + ind + 4
 
-                if end != -1:
+                if end >= 0:  # second ff
                     target = temp[ind + 4:end]  # making a list of only the possible message
                     ntemp = ""
                     tar_wo = unicode(target, errors='ignore')  # allows target to be encoded without errors
@@ -36,10 +37,5 @@ def decode():
 
                         if ntemp != "":
                             message.append(ntemp)
-
-
-
     print(message)
-
-
 decode()

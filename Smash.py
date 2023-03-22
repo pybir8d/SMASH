@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
 import logging
+import sys
 
 import click
-from scapy.layers.inet import IP
+from scapy.layers.inet import IP, TCP
 from scapy.packet import Raw
+from scapy.sendrecv import sr1
 from scapy.utils import rdpcap, wrpcap
 
 
@@ -24,12 +26,12 @@ def main(lowres, highres, textmessage, filemessage):
 
 
 def connect_to_server():
-    """syn = IP(dst='3.227.232.81') / TCP(dport=80, flags='S')
+    syn = IP(dst='3.227.232.81') / TCP(dport=80, flags='S')
     syn_ack = sr1(syn)
     getStr = 'GET / HTTP/1.1\r\nHost: 3.227.232.81\r\n\r\n'
     request = IP(dst='3.227.232.81') / TCP(dport=80, sport=syn_ack[TCP].dport, seq=syn_ack[TCP].ack,
                                            ack=syn_ack[TCP].seq + 1, flags='A') / getStr
-    reply = sr1(request)"""
+    reply = sr1(request)
 
     atwS = ("I walked through the door with you The air was cold But something about it felt like home somehow "
             "And I, left my scarf there at your sister's house And you've still got it in your drawer even now "
@@ -56,7 +58,7 @@ def connect_to_server():
     packets = rdpcap("pack3.pcap")  # "reading" pcap file
     c = 0  # for packets counter
     lc = 0  # letter count for string
-    listp = []  # list of packets with target
+    listT = []
     newPackets = []
 
     for packet in packets:
@@ -64,7 +66,7 @@ def connect_to_server():
             temp = packet["Raw"].load
 
             ind = temp.find(b'\xff\xff\xff\xff\xff\xff\xff\xff\xff')
-            if ind != -1:  # checking that the nine values above do exist in the packet
+            if ind >= 0:  # checking that the nine values above do exist in the packet
                 endIn = ind
                 while temp[endIn] == 255 and endIn < len(temp) - 1:
                     endIn += 1
@@ -73,14 +75,17 @@ def connect_to_server():
                 endIn = endIn - 4
                 numOfBytesToHide = endIn - ind + 1  # how many bytes i can hide
 
-                if lc >= len(atwS):
+                if lc >= len(atwS_inB):
                     lc = 0
 
                 ntemp = temp[:strt] + atwS_inB[lc:lc + numOfBytesToHide] + temp[endIn:]
-                lc += numOfBytesToHide  # letter counter
+                listT.append((c, atwS_inB[lc:lc + numOfBytesToHide]))
+                lc += numOfBytesToHide
+
+                # if (lc + numOfBytesToHide) > len(atwS):
+                # index = lc + numOfBytesToHide - len(atwS)
 
                 packet["Raw"].load = ntemp
-                listp.append(packet)  # finding the packets with nine ff values
 
         packet = packet[IP]
         del packet[IP].chksum
@@ -91,6 +96,9 @@ def connect_to_server():
 
     wrpcap('newpackT.pcap', newPackets)  # creating a new file after changing the packets "writing"
 
+    for c, t in listT:
+        print(str(c + 1) + ":" + str(t))
+
 
 if __name__ == "__main__":
     """
@@ -100,4 +108,3 @@ if __name__ == "__main__":
     """
     logging.basicConfig(level=logging.DEBUG)
     main()
-
