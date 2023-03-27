@@ -8,7 +8,7 @@ from scapy.layers.inet import IP, TCP
 from scapy.packet import Raw
 from scapy.sendrecv import sr1
 from scapy.utils import rdpcap, wrpcap
-
+import pyDes
 
 @click.command()
 @click.option("--lowres", "-l", default='low.m3u8', help="Low resolution video in .m3u8")
@@ -16,16 +16,18 @@ from scapy.utils import rdpcap, wrpcap
 @click.option("--textmessage", "-t", default='Hello, World', help="Text message to be hidden in file")
 @click.option("--filemessage", "-f", default='C:\\Users\\livia\\PycharmProjects\\SMASH\\message.idk',
               help="File message to be hidden in file")
-def main(lowres, highres, textmessage, filemessage):
-    # for actual steg process
-    if textmessage != "":
-        click.echo("Files: " + highres + " and " + lowres + ". Message: " + textmessage)
-        connect_to_server()
-    else:
-        click.echo("Files: " + highres + " and " + lowres + ". Message: " + filemessage)
+@click.option("--key", "-k", default='SULLIVAN', help="Input an 8 letter word (8 bytes) as the encryption key")
+
+#def main(lowres, highres, textmessage, filemessage):
+ #   # for actual steg process
+  #  if textmessage != "":
+   #     click.echo("Files: " + highres + " and " + lowres + ". Message: " + textmessage)
+    #    connect_to_server()
+    #else:
+     #   click.echo("Files: " + highres + " and " + lowres + ". Message: " + filemessage)"""
 
 
-def connect_to_server():
+def connect_to_server(lowres, highres, textmessage, filemessage, key):
     syn = IP(dst='3.227.232.81') / TCP(dport=80, flags='S')
     syn_ack = sr1(syn)
     getStr = 'GET / HTTP/1.1\r\nHost: 3.227.232.81\r\n\r\n'
@@ -53,7 +55,9 @@ def connect_to_server():
             "I walk home alone But you keep my old scarf from that very first week 'Cause it reminds you of innocence And it smells like me "
             "You can't get rid of it 'Cause you remember it all too well, yeah "
             "'Cause there we are again when I loved you so Back before you lost the one real thing you've ever known")
-    atwS_inB = bytearray(atwS, "ascii")
+    k = pyDes.des(bytes(key, 'ascii'), pyDes.CBC, "\0\0\0\0\0\0\0\0", pad=None, padmode=pyDes.PAD_PKCS5)
+    atwS = k.encrypt(atwS.encode('utf-8'))
+    atwS_inB = bytearray(atwS)
 
     packets = rdpcap("pack3.pcap")  # "reading" pcap file
     c = 0  # for packets counter
@@ -76,14 +80,12 @@ def connect_to_server():
                 numOfBytesToHide = endIn - ind + 1  # how many bytes i can hide
 
                 if lc >= len(atwS_inB):
-                    lc = 0
+                    break
 
                 ntemp = temp[:strt] + atwS_inB[lc:lc + numOfBytesToHide] + temp[endIn:]
-                listT.append((c, atwS_inB[lc:lc + numOfBytesToHide]))
+                #listT.append((c, atwS_inB[lc:lc + numOfBytesToHide]))
+                listT.append(atwS_inB[lc:lc + numOfBytesToHide])
                 lc += numOfBytesToHide
-
-                # if (lc + numOfBytesToHide) > len(atwS):
-                # index = lc + numOfBytesToHide - len(atwS)
 
                 packet["Raw"].load = ntemp
 
@@ -95,16 +97,17 @@ def connect_to_server():
         c += 1
 
     wrpcap('newpackT.pcap', newPackets)  # creating a new file after changing the packets "writing"
+    #for c, t in listT:
+     #   print(str(c + 1) + ": " + str(t))
+    print(b' '.join(listT))
 
-    for c, t in listT:
-        print(str(c + 1) + ":" + str(t))
 
-
-if __name__ == "__main__":
-    """
-    This initiates and calls the main function for this application. 
-
-    Generally, this should be the last bit of code in this script.
-    """
-    logging.basicConfig(level=logging.DEBUG)
-    main()
+#if __name__ == "__main__":
+ #   """
+  #  This initiates and calls the main function for this application.
+#
+ #   Generally, this should be the last bit of code in this script.
+  #  """
+   # logging.basicConfig(level=logging.DEBUG)
+    #main()
+connect_to_server()
