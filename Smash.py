@@ -1,41 +1,23 @@
 #!/usr/bin/python
 
-import logging
-import sys
-
 import click
-from scapy.layers.inet import IP, TCP
+from scapy.layers.inet import IP
 from scapy.packet import Raw
-from scapy.sendrecv import sr1
 from scapy.utils import rdpcap, wrpcap
 import pyDes
 
 @click.command()
-@click.option("--lowres", "-l", default='low.m3u8', help="Low resolution video in .m3u8")
-@click.option("--highres", "-h", default='high.m3u8', help="High resolution video in .m3u8")
-@click.option("--textmessage", "-t", default='Hello, World', help="Text message to be hidden in file")
-@click.option("--filemessage", "-f", default='C:\\Users\\livia\\PycharmProjects\\SMASH\\message.idk',
-              help="File message to be hidden in file")
+@click.option("--inputpcap", "-i", default='pack3.pcap', help="The pcap file holding the packets from the stream")
+@click.option("--outputpcap", "-o", default='output.pcap', help="The outfile name (pcap) where the encoded packets will go")
+@click.option("--textmessage", "-t", default=None, help="Text message to be hidden in file")
+@click.option("--filemessage", "-f", default=None, help="File message to be hidden in file")
 @click.option("--key", "-k", default='SULLIVAN', help="Input an 8 letter word (8 bytes) as the encryption key")
 
-#def main(lowres, highres, textmessage, filemessage):
- #   # for actual steg process
-  #  if textmessage != "":
-   #     click.echo("Files: " + highres + " and " + lowres + ". Message: " + textmessage)
-    #    connect_to_server()
-    #else:
-     #   click.echo("Files: " + highres + " and " + lowres + ". Message: " + filemessage)"""
-
-
-def connect_to_server(lowres, highres, textmessage, filemessage, key):
-    syn = IP(dst='3.227.232.81') / TCP(dport=80, flags='S')
-    syn_ack = sr1(syn)
-    getStr = 'GET / HTTP/1.1\r\nHost: 3.227.232.81\r\n\r\n'
-    request = IP(dst='3.227.232.81') / TCP(dport=80, sport=syn_ack[TCP].dport, seq=syn_ack[TCP].ack,
-                                           ack=syn_ack[TCP].seq + 1, flags='A') / getStr
-    reply = sr1(request)
-
-    atwS = ("I walked through the door with you The air was cold But something about it felt like home somehow "
+def encrypt (inputpcap, outputpcap, textmessage, filemessage, key):
+    inf = inputpcap
+    outf = outputpcap
+    if textmessage == None and filemessage == None:
+        message_befB = ("I walked through the door with you The air was cold But something about it felt like home somehow "
             "And I, left my scarf there at your sister's house And you've still got it in your drawer even now "
             "Oh, your sweet disposition And my wide-eyed gaze We're singing in the car, getting lost upstate "
             "Autumn leaves falling down like pieces into place And I can picture it after all these days "
@@ -55,14 +37,21 @@ def connect_to_server(lowres, highres, textmessage, filemessage, key):
             "I walk home alone But you keep my old scarf from that very first week 'Cause it reminds you of innocence And it smells like me "
             "You can't get rid of it 'Cause you remember it all too well, yeah "
             "'Cause there we are again when I loved you so Back before you lost the one real thing you've ever known")
-    k = pyDes.des(bytes(key, 'ascii'), pyDes.CBC, "\0\0\0\0\0\0\0\0", pad=None, padmode=pyDes.PAD_PKCS5)
-    atwS = k.encrypt(atwS.encode('utf-8'))
-    atwS_inB = bytearray(atwS)
+    elif textmessage != None:
+        message_befB = textmessage
 
-    packets = rdpcap("pack3.pcap")  # "reading" pcap file
+    else:
+        message_befB = filemessage
+
+    k = pyDes.des(bytes(key, 'ascii'), pyDes.CBC, "\0\0\0\0\0\0\0\0", pad=None, padmode=pyDes.PAD_PKCS5)
+    message_befB = k.encrypt(message_befB.encode('utf-8'))
+    mes = bytearray(message_befB)
+    return mes, inf, outf
+
+def encode (message, inputpcap, outputpcap):
+    packets = rdpcap(inputpcap)  # "reading" pcap file
     c = 0  # for packets counter
     lc = 0  # letter count for string
-    listT = []
     newPackets = []
 
     for packet in packets:
@@ -79,12 +68,10 @@ def connect_to_server(lowres, highres, textmessage, filemessage, key):
                 endIn = endIn - 4
                 numOfBytesToHide = endIn - ind + 1  # how many bytes i can hide
 
-                if lc >= len(atwS_inB):
+                if lc >= len(message):
                     break
 
-                ntemp = temp[:strt] + atwS_inB[lc:lc + numOfBytesToHide] + temp[endIn:]
-                #listT.append((c, atwS_inB[lc:lc + numOfBytesToHide]))
-                listT.append(atwS_inB[lc:lc + numOfBytesToHide])
+                ntemp = temp[:strt] + message[lc:lc + numOfBytesToHide] + temp[endIn:]
                 lc += numOfBytesToHide
 
                 packet["Raw"].load = ntemp
@@ -96,18 +83,15 @@ def connect_to_server(lowres, highres, textmessage, filemessage, key):
         newPackets.append(packet)
         c += 1
 
-    wrpcap('newpackT.pcap', newPackets)  # creating a new file after changing the packets "writing"
-    #for c, t in listT:
-     #   print(str(c + 1) + ": " + str(t))
-    print(b' '.join(listT))
+    wrpcap(outputpcap, newPackets)  # creating a new file after changing the packets "writing"
 
 
-#if __name__ == "__main__":
- #   """
-  #  This initiates and calls the main function for this application.
-#
- #   Generally, this should be the last bit of code in this script.
-  #  """
-   # logging.basicConfig(level=logging.DEBUG)
-    #main()
-connect_to_server()
+if __name__ == "__main__":
+    """
+    This initiates and calls the main function for this application.
+
+    Generally, this should be the last bit of code in this script.
+    """
+
+    mesE, inputf, outputf = encrypt(standalone_mode=False)  # encrypted message
+    encode(mesE, inputf, outputf)
