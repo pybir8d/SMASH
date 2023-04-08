@@ -16,6 +16,7 @@ import pyDes
 def encrypt (inputpcap, outputpcap, textmessage, filemessage, key):
     inf = inputpcap
     outf = outputpcap
+    message_befB = []
     if textmessage == None and filemessage == None:
         message_befB = ("I walked through the door with you The air was cold But something about it felt like home somehow "
             "And I, left my scarf there at your sister's house And you've still got it in your drawer even now "
@@ -41,7 +42,14 @@ def encrypt (inputpcap, outputpcap, textmessage, filemessage, key):
         message_befB = textmessage
 
     else:
-        message_befB = filemessage
+        temporaryLIST = []
+        with open(filemessage, 'rb') as f:
+            byte = f.read(1)
+            while byte != b'':
+                temporaryLIST.append(byte)
+                byte = f.read(1)
+        message_befB = ''.join(str(temporaryLIST))
+
 
     k = pyDes.des(bytes(key, 'ascii'), pyDes.CBC, "\0\0\0\0\0\0\0\0", pad=None, padmode=pyDes.PAD_PKCS5)
     message_befB = k.encrypt(message_befB.encode('utf-8'))

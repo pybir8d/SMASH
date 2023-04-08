@@ -3,10 +3,10 @@ from scapy.utils import rdpcap
 import click
 import pyDes
 
+
 @click.command()
 @click.option("--pcap", "-i", default='output.pcap', help="pcap file with message encoded")
 @click.option("--key", "-k", default='SULLIVAN', help="Input an 8 letter word (8 bytes) as the encryption key")
-
 def decode(pcap, key):
     packets = rdpcap(pcap)  # "reading" pcap file
     message = []
@@ -32,7 +32,21 @@ def decrypt(message, key):
     strM = b''.join(message)
     k = pyDes.des(bytes(key, 'ascii'), pyDes.CBC, "\0\0\0\0\0\0\0\0", pad=None, padmode=pyDes.PAD_PKCS5)
     strM = k.decrypt(strM)
-    print(strM)
+
+    strMs = str(strM)
+    finalS = strMs[2:-1]
+
+    if strMs[0:2] == 'b"':
+        first, second = strM.split(b'[')
+        second, third = second.split(b']')
+        listingThis = second.split(b"', b'")
+
+        with open("test1.txt", 'wb') as file:
+            for b in listingThis:
+                file.write(b)
+        file.close()
+
+    print(finalS)
 
 
 if __name__ == "__main__":
