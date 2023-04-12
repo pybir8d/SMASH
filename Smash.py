@@ -48,12 +48,15 @@ def encrypt (inputpcap, outputpcap, textmessage, filemessage, key):
             while byte != b'':
                 temporaryLIST.append(byte)
                 byte = f.read(1)
-        message_befB = ''.join(str(temporaryLIST))
+        mes = b''.join(temporaryLIST)
 
 
     k = pyDes.des(bytes(key, 'ascii'), pyDes.CBC, "\0\0\0\0\0\0\0\0", pad=None, padmode=pyDes.PAD_PKCS5)
-    message_befB = k.encrypt(message_befB.encode('utf-8'))
-    mes = bytearray(message_befB)
+
+    if filemessage == None:
+        mes = bytearray(message_befB.encode('utf-8'))
+    mes = k.encrypt(mes)
+
     return mes, inf, outf
 
 def encode (message, inputpcap, outputpcap):

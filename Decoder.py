@@ -7,10 +7,12 @@ import pyDes
 @click.command()
 @click.option("--pcap", "-i", default='output.pcap', help="pcap file with message encoded")
 @click.option("--key", "-k", default='SULLIVAN', help="Input an 8 letter word (8 bytes) as the encryption key")
-def decode(pcap, key):
+@click.option("--file", "-f", default=None, help="File message to be hidden in file")
+def decode(pcap, key, file):
     packets = rdpcap(pcap)  # "reading" pcap file
     message = []
     decrypt_key = key
+    is_there_a_file = file
 
     for packet in packets:
         if packet.haslayer(Raw):
@@ -25,10 +27,10 @@ def decode(pcap, key):
                 if end >= 0:  # second ff
                     target = temp[ind + 4:end1]  # making a list of only the possible message
                     message.append(target)
-    return message, decrypt_key
+    return message, decrypt_key, is_there_a_file
 
 
-def decrypt(message, key):
+def decrypt(message, key, file):
     strM = b''.join(message)
     k = pyDes.des(bytes(key, 'ascii'), pyDes.CBC, "\0\0\0\0\0\0\0\0", pad=None, padmode=pyDes.PAD_PKCS5)
     strM = k.decrypt(strM)
@@ -36,17 +38,11 @@ def decrypt(message, key):
     strMs = str(strM)
     finalS = strMs[2:-1]
 
-    if strMs[0:2] == 'b"':
-        first, second = strM.split(b'[')
-        second, third = second.split(b']')
-        listingThis = second.split(b"', b'")
-
-        with open("test1.txt", 'wb') as file:
-            for b in listingThis:
-                file.write(b)
-        file.close()
-
-    print(finalS)
+    if file != None:
+        strM = bytes(strM)
+        with open(file, 'wb') as pcfile:
+            pcfile.write(strM)
+        pcfile.close()
 
 
 if __name__ == "__main__":
@@ -55,5 +51,5 @@ if __name__ == "__main__":
 
     Generally, this should be the last bit of code in this script.
     """
-    mes, key = decode(standalone_mode=False)
-    decrypt(mes, key)
+    mes, key, f = decode(standalone_mode=False)
+    decrypt(mes, key, f)
