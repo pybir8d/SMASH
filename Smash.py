@@ -50,13 +50,12 @@ def encrypt (inputpcap, outputpcap, textmessage, filemessage, key):
                 byte = f.read(1)
         mes = b''.join(temporaryLIST)
 
-
     k = pyDes.des(bytes(key, 'ascii'), pyDes.CBC, "\0\0\0\0\0\0\0\0", pad=None, padmode=pyDes.PAD_PKCS5)
 
     if filemessage == None:
         mes = bytearray(message_befB.encode('utf-8'))
     mes = k.encrypt(mes)
-
+    mes = bytes(str(len(mes)), 'ascii') + mes
     return mes, inf, outf
 
 def encode (message, inputpcap, outputpcap):
@@ -79,13 +78,12 @@ def encode (message, inputpcap, outputpcap):
                 endIn = endIn - 4
                 numOfBytesToHide = endIn - ind + 1  # how many bytes i can hide
 
-                if lc >= len(message):
-                    break
 
-                ntemp = temp[:strt] + message[lc:lc + numOfBytesToHide] + temp[endIn:]
-                lc += numOfBytesToHide
+                if lc < len(message):
+                    ntemp = temp[:strt] + message[lc:lc + numOfBytesToHide] + temp[endIn:]
+                    lc += numOfBytesToHide
 
-                packet["Raw"].load = ntemp
+                    packet["Raw"].load = ntemp
 
         packet = packet[IP]
         del packet[IP].chksum
